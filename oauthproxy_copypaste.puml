@@ -41,7 +41,9 @@ note left of WebBrowser
   <size:10>""&scope=read""
   <size:10>""&state=state1234...""</size>
 end note
+WebBrowser <- WebBrowser: //Redirecting//
 WebBrowser -> AuthServer: ""https://cloud.digitalocean.com/v1/oauth/authorize...""
+AuthServer -> WebBrowser: Display Login Page
 User <- WebBrowser: Show Login Page
 rnote left
 {{
@@ -74,6 +76,7 @@ note left of WebBrowser
   <size:10>""?code=asdf1234...""</size>
   <size:10>""&state=state1234...""</size>
 end note
+WebBrowser <- WebBrowser: //Redirecting//
 WebBrowser -> OAuthProxy: ""https://myproxy/oauth/callback/...""\n""?code=asdf1234...""\n""&state=state1234...""
 OAuthProxy -> OAuthProxy: Validate State <&arrow-right> Ok
 deactivate OAuthProxy
