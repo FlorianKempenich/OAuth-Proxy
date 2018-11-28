@@ -89,7 +89,8 @@ WebBrowser <- OAuthProxy: Display **Oauth token & refresh token**
 User <- WebBrowser: Show **Oauth token & refresh token**
 User -> User: Copy **Oauth token & refresh token**
 User -> CLIApp: Paste **Oauth token & refresh token**
-hnote over CLIApp: Received Tokens
+CLIApp -> CLIApp: Store token
+hnote over CLIApp: Token stored
 
 === Perform authenticated requests ==
 ...

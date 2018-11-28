@@ -38,6 +38,7 @@ note left
   ""?capture_uri=http://localhost:4444""
 endnote
 User -> WebBrowser: ""https://myproxy/oauth/init""\n""?capture_uri=http://localhost:4444""
+activate WebBrowser #BurlyWood
 WebBrowser -> OAuthProxy: ""https://myproxy/oauth/init""\n""?capture_uri=http://localhost:4444""
 OAuthProxy -> OAuthProxy: Generate State
 OAuthProxy -> OAuthProxy: Store in Session:\n* State\n* ""capture_uri""
@@ -104,21 +105,28 @@ OAuthProxy -> OAuthProxy: Validate State <&arrow-right> Ok
 OAuthProxy -> AuthServer: Request token with: \n* Code: ""asdf1234..."" \n* **Client secret**: ""****""
 AuthServer -> AuthServer: Validate Code & Client secret <&arrow-right> Ok
 OAuthProxy <- AuthServer: **Oauth token & refresh token**
-WebBrowser <- OAuthProxy: Redirect to ""capture_uri"" with:\n* **OAuth Token**\n* **Refresh Token**
-note left of WebBrowser
-  <size:10>""https://myproxy/oauth/callback""</size>
-  <size:10>""?code=asdf1234...""</size>
-  <size:10>""&state=state1234...""</size>
-end note
+OAuthProxy -> OAuthProxy: Get from Session:\n""capture_uri""
+OAuthProxy -> OAuthProxy: Close Session
 deactivate OAuthProxy
+WebBrowser <- OAuthProxy: Redirect to ""capture_uri"" with:\n* **OAuth Token**\n* **Refresh Token**
+hnote over WebBrowser
+  Redirecting to:
+  <size:10>""http://localhost:4444""</size>
+  <size:10>""?token=token1234...""</size>
+  <size:10>""&refresh_token=refresh1234...""</size>
+end note
 
+CLIApp <- WebBrowser: ""http://localhost:4444""\n""?token=token1234...""\n""&refresh_token=refresh1234...""
+CLIApp -> CLIApp: Store token
+hnote over CLIApp: Token stored
+CLIApp -> WebBrowser: Display: "Ok you can close this window now"
 
-== DEBUG ==
-WebBrowser <- OAuthProxy: Display **Oauth token & refresh token**
-User <- WebBrowser: Copy **Oauth token & refresh token**
-User -> CLIApp: Paste **Oauth token & refresh token**
-hnote over CLIApp: Received Tokens
+User <- WebBrowser: Show: "Ok you can close this window now"
+User --> WebBrowser: //Close browswer//
+destroy WebBrowser
 
+CLIApp -> CLIApp: Stop local webserver
+deactivate CLIApp
 
 
 
