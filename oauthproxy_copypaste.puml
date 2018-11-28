@@ -1,0 +1,97 @@
+@startuml
+skinparam BoxPadding 10
+
+
+title OAuth 2 Proxy for CLI Apps - Copy-Paste Version
+
+
+box "Local" #Bisque
+  actor User
+  participant CLIApp
+  participant WebBrowser
+end box
+box "Hosted Proxy" #PaleGreen
+  participant OAuthProxy #PaleGreen
+end box
+box "Api" #PowderBlue
+  participant AuthServer
+  participant ApiServer
+end box  
+
+
+=== Get OAuth Token ==
+== Login Request to Cli ==
+User -> CLIApp: ""kata login""
+User <- CLIApp: Show Proxy URL
+note left: ""https://myproxy/oauth/init""
+
+== Show Login Page ==
+User -> User: //Click//
+note left: ""https://myproxy/oauth/init""
+User -> WebBrowser: ""https://myproxy/oauth/init""
+WebBrowser -> OAuthProxy: ""https://myproxy/oauth/init""
+OAuthProxy -> OAuthProxy: Generate State
+activate OAuthProxy #LightGreen
+WebBrowser <- OAuthProxy: Redirect to AuthServer with:\n* Params\n* State
+note left of WebBrowser
+  <size:10>""https://cloud.digitalocean.com/v1/oauth/authorize""</size>
+  <size:10>""?client_id=...""</size>
+  <size:10>""&redirect_uri=https://myproxy/oauth/callback""</size>
+  <size:10>""&response_type=code""</size>
+  <size:10>""&scope=read""
+  <size:10>""&state=state1234...""</size>
+end note
+WebBrowser -> AuthServer: ""https://cloud.digitalocean.com/v1/oauth/authorize...""
+User <- WebBrowser: Show Login Page
+rnote left
+{{
+salt
+{
+  Login    | "         "
+  Password | "         "
+  [Cancel] | [  OK   ]
+}
+}}
+end note
+
+== Login to API ==
+User -> WebBrowser: Login with credentials
+rnote left
+{{
+salt
+{
+  Login    | "MyName   "
+  Password | "****     "
+  [Cancel] | [**OK** ]
+}
+}}
+end note
+WebBrowser -> AuthServer: Login
+AuthServer -> AuthServer: Validate credentials <&arrow-right> Ok
+WebBrowser <- AuthServer: Redirect to ""redirect_uri"" with: \n* Code\n* State
+note left of WebBrowser
+  <size:10>""https://myproxy/oauth/callback""</size>
+  <size:10>""?code=asdf1234...""</size>
+  <size:10>""&state=state1234...""</size>
+end note
+WebBrowser -> OAuthProxy: ""https://myproxy/oauth/callback/...""\n""?code=asdf1234...""\n""&state=state1234...""
+OAuthProxy -> OAuthProxy: Validate State <&arrow-right> Ok
+deactivate OAuthProxy
+
+== Request OAuth Token ==
+OAuthProxy -> AuthServer: Request token with: \n* Code: ""asdf1234..."" \n* **Client secret**: ""****""
+AuthServer -> AuthServer: Validate Code & Client secret <&arrow-right> Ok
+OAuthProxy <- AuthServer: **Oauth token & refresh token**
+WebBrowser <- OAuthProxy: Display **Oauth token & refresh token**
+User <- WebBrowser: Show **Oauth token & refresh token**
+User -> User: Copy **Oauth token & refresh token**
+User -> CLIApp: Paste **Oauth token & refresh token**
+hnote over CLIApp: Received Tokens
+
+=== Perform authenticated requests ==
+...
+User -> CLIApp: Command requiring authentication
+CLIApp -> ApiServer: Request with **Token**
+ApiServer -> ApiServer: Validate **Token** <&arrow-right> Ok
+CLIApp <- ApiServer: Response
+@enduml
