@@ -5,15 +5,15 @@ skinparam BoxPadding 10
 title OAuth 2 Proxy for CLI Apps - Copy-Paste Version
 
 
-box "Local" #Bisque
+box "Local\n\nlocalhost" #Bisque
   actor User
   participant CLIApp
   participant WebBrowser
 end box
-box "Hosted Proxy" #PaleGreen
+box "Hosted Proxy\n\nhttps://myproxy" #PaleGreen
   participant OAuthProxy #PaleGreen
 end box
-box "Api" #PowderBlue
+box "Api\n\nhttps://the.api.com" #PowderBlue
   participant AuthServer
   participant ApiServer
 end box  
@@ -35,14 +35,14 @@ activate OAuthProxy #LightGreen
 WebBrowser <- OAuthProxy: Redirect to AuthServer with:\n* Params\n* State
 hnote over WebBrowser
   Redirecting to:
-  <size:10>""https://cloud.digitalocean.com/v1/oauth/authorize""</size>
+  <size:10>""https://the.api.com/oauth/authorize""</size>
   <size:10>""?client_id=...""</size>
   <size:10>""&redirect_uri=https://myproxy/oauth/callback""</size>
   <size:10>""&response_type=code""</size>
   <size:10>""&scope=read""
   <size:10>""&state=state1234...""</size>
 end note
-WebBrowser -> AuthServer: ""https://cloud.digitalocean.com/v1/oauth/authorize...""
+WebBrowser -> AuthServer: ""https://the.api.com/oauth/authorize...""
 AuthServer -> WebBrowser: Display Login Page
 User <- WebBrowser: Show Login Page
 rnote left
