@@ -1,0 +1,131 @@
+@startuml
+skinparam BoxPadding 10
+
+
+title OAuth 2 Proxy for CLI Apps - Capture Response Version
+
+
+box "Local\n\nlocalhost" #Bisque
+  actor User
+  participant CLIApp
+  participant WebBrowser
+end box
+box "Hosted Proxy\n\nhttps://myproxy" #PaleGreen
+  participant OAuthProxy #PaleGreen
+end box
+box "Api\n\nhttps://the.api.com" #PowderBlue
+  participant AuthServer
+  participant ApiServer
+end box  
+
+
+=== Get OAuth Token ==
+== Login Request to Cli ==
+User -> CLIApp: ""kata login""
+CLIApp -> CLIApp: Start local webserver\non port ""4444""
+activate CLIApp #BurlyWood
+User <- CLIApp: Show Proxy URL with:\n* capture_uri: ""http://localhost:4444/""
+note left
+  ""https://myproxy/oauth/init""
+  ""?capture_uri=http://localhost:4444""
+endnote
+
+== Show Login Page ==
+' TODO: Add alt/else => Open url / click if open doesn't work
+User -> User: //Click//
+note left
+  ""https://myproxy/oauth/init""
+  ""?capture_uri=http://localhost:4444""
+endnote
+User -> WebBrowser: ""https://myproxy/oauth/init""\n""?capture_uri=http://localhost:4444""
+WebBrowser -> OAuthProxy: ""https://myproxy/oauth/init""\n""?capture_uri=http://localhost:4444""
+OAuthProxy -> OAuthProxy: Generate State
+OAuthProxy -> OAuthProxy: Store in Session:\n* State\n* ""capture_uri""
+activate OAuthProxy #LightGreen
+WebBrowser <- OAuthProxy: Redirect to AuthServer with:\n* Params\n* State
+hnote over WebBrowser
+  Redirecting to:
+  <size:10>""https://the.api.com/oauth/authorize""</size>
+  <size:10>""?client_id=...""</size>
+  <size:10>""&redirect_uri=https://myproxy/oauth/callback""</size>
+  <size:10>""&response_type=code""</size>
+  <size:10>""&scope=read""
+  <size:10>""&state=state1234...""</size>
+end note
+WebBrowser -> AuthServer: ""https://the.api.com/oauth/authorize...""
+AuthServer -> WebBrowser: Display Login Page
+User <- WebBrowser: Show Login Page
+rnote left
+{{
+salt
+{
+  Login    | "         "
+  Password | "         "
+  [Cancel] | [  OK   ]
+}
+}}
+end note
+
+== Login to API ==
+User -> WebBrowser: Login with credentials
+rnote left
+{{
+salt
+{
+  Login    | "MyName   "
+  Password | "****     "
+  [Cancel] | [**OK** ]
+}
+}}
+end note
+WebBrowser -> AuthServer: Login
+AuthServer -> AuthServer: Validate credentials <&arrow-right> Ok
+WebBrowser <- AuthServer: Redirect to ""redirect_uri"" with: \n* Code\n* State
+hnote over WebBrowser
+  Redirecting to:
+  <size:10>""https://myproxy/oauth/callback""</size>
+  <size:10>""?code=asdf1234...""</size>
+  <size:10>""&state=state1234...""</size>
+end note
+WebBrowser -> OAuthProxy: ""https://myproxy/oauth/callback/...""\n""?code=asdf1234...""\n""&state=state1234...""
+OAuthProxy -> OAuthProxy: Validate State <&arrow-right> Ok
+
+
+
+
+
+
+
+
+
+
+
+== Request OAuth Token ==
+OAuthProxy -> AuthServer: Request token with: \n* Code: ""asdf1234..."" \n* **Client secret**: ""****""
+AuthServer -> AuthServer: Validate Code & Client secret <&arrow-right> Ok
+OAuthProxy <- AuthServer: **Oauth token & refresh token**
+WebBrowser <- OAuthProxy: Redirect to ""capture_uri"" with:\n* **OAuth Token**\n* **Refresh Token**
+note left of WebBrowser
+  <size:10>""https://myproxy/oauth/callback""</size>
+  <size:10>""?code=asdf1234...""</size>
+  <size:10>""&state=state1234...""</size>
+end note
+deactivate OAuthProxy
+
+
+== DEBUG ==
+WebBrowser <- OAuthProxy: Display **Oauth token & refresh token**
+User <- WebBrowser: Copy **Oauth token & refresh token**
+User -> CLIApp: Paste **Oauth token & refresh token**
+hnote over CLIApp: Received Tokens
+
+
+
+
+=== Perform authenticated requests ==
+...
+User -> CLIApp: Command requiring authentication
+CLIApp -> ApiServer: Request with **Token**
+ApiServer -> ApiServer: Validate **Token** <&arrow-right> Ok
+CLIApp <- ApiServer: Response
+@enduml
