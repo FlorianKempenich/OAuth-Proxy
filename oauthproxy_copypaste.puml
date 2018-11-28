@@ -33,7 +33,8 @@ WebBrowser -> OAuthProxy: ""https://myproxy/oauth/init""
 OAuthProxy -> OAuthProxy: Generate State
 activate OAuthProxy #LightGreen
 WebBrowser <- OAuthProxy: Redirect to AuthServer with:\n* Params\n* State
-note left of WebBrowser
+hnote over WebBrowser
+  Redirecting to:
   <size:10>""https://cloud.digitalocean.com/v1/oauth/authorize""</size>
   <size:10>""?client_id=...""</size>
   <size:10>""&redirect_uri=https://myproxy/oauth/callback""</size>
@@ -41,7 +42,6 @@ note left of WebBrowser
   <size:10>""&scope=read""
   <size:10>""&state=state1234...""</size>
 end note
-WebBrowser <- WebBrowser: //Redirecting//
 WebBrowser -> AuthServer: ""https://cloud.digitalocean.com/v1/oauth/authorize...""
 AuthServer -> WebBrowser: Display Login Page
 User <- WebBrowser: Show Login Page
@@ -71,12 +71,12 @@ end note
 WebBrowser -> AuthServer: Login
 AuthServer -> AuthServer: Validate credentials <&arrow-right> Ok
 WebBrowser <- AuthServer: Redirect to ""redirect_uri"" with: \n* Code\n* State
-note left of WebBrowser
+hnote over WebBrowser
+  Redirecting to:
   <size:10>""https://myproxy/oauth/callback""</size>
   <size:10>""?code=asdf1234...""</size>
   <size:10>""&state=state1234...""</size>
 end note
-WebBrowser <- WebBrowser: //Redirecting//
 WebBrowser -> OAuthProxy: ""https://myproxy/oauth/callback/...""\n""?code=asdf1234...""\n""&state=state1234...""
 OAuthProxy -> OAuthProxy: Validate State <&arrow-right> Ok
 deactivate OAuthProxy
