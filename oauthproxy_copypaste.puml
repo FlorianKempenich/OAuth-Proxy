@@ -29,8 +29,10 @@ note left: ""https://myproxy/oauth/init""
 User -> User: //Click//
 note left: ""https://myproxy/oauth/init""
 User -> WebBrowser: ""https://myproxy/oauth/init""
+activate WebBrowser #BurlyWood
 WebBrowser -> OAuthProxy: ""https://myproxy/oauth/init""
 OAuthProxy -> OAuthProxy: Generate State
+OAuthProxy -> OAuthProxy: Store State in Session
 activate OAuthProxy #LightGreen
 WebBrowser <- OAuthProxy: Redirect to AuthServer with:\n* Params\n* State
 hnote over WebBrowser
@@ -79,6 +81,7 @@ hnote over WebBrowser
 end note
 WebBrowser -> OAuthProxy: ""https://myproxy/oauth/callback/...""\n""?code=asdf1234...""\n""&state=state1234...""
 OAuthProxy -> OAuthProxy: Validate State <&arrow-right> Ok
+OAuthProxy -> OAuthProxy: Close Session
 deactivate OAuthProxy
 
 == Request OAuth Token ==
@@ -88,6 +91,8 @@ OAuthProxy <- AuthServer: **Oauth token & refresh token**
 WebBrowser <- OAuthProxy: Display **Oauth token & refresh token**
 User <- WebBrowser: Show **Oauth token & refresh token**
 User -> User: Copy **Oauth token & refresh token**
+User --> WebBrowser: //Close browser//
+deactivate WebBrowser
 User -> CLIApp: Paste **Oauth token & refresh token**
 CLIApp -> CLIApp: Store token
 hnote over CLIApp: Token stored

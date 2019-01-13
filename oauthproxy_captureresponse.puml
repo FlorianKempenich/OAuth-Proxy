@@ -122,7 +122,7 @@ hnote over CLIApp: Token stored
 CLIApp -> WebBrowser: Display: "Ok you can close this window now"
 
 User <- WebBrowser: Show: "Ok you can close this window now"
-User --> WebBrowser: //Close browswer//
+User --> WebBrowser: //Close browser//
 destroy WebBrowser
 
 CLIApp -> CLIApp: Stop local webserver
