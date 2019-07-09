@@ -13,6 +13,7 @@ end box
 box "Hosted Proxy\n\nhttps://myproxy" #PaleGreen
   participant OAuthProxy #PaleGreen
 end box
+
 box "Api\n\nhttps://the.api.com" #PowderBlue
   participant AuthServer
   participant ApiServer
